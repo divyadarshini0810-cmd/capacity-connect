@@ -17,4 +17,6 @@ ENV FRONTEND_DIST=/app/frontend-dist
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 EXPOSE 10000
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-10000} --workers 2 --threads 4 --timeout 120 wsgi:app"]
+# A single worker prevents concurrent first-start schema creation on a new
+# managed database; threads still handle several requests concurrently.
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 4 --timeout 120 wsgi:app"]
