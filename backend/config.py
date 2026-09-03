@@ -8,10 +8,12 @@ def database_uri():
     """Return a SQLAlchemy-compatible URL for local SQLite or Render Postgres."""
     value = os.getenv("DATABASE_URL")
     if value:
-        # Some providers retain the legacy postgres:// scheme while SQLAlchemy
-        # expects postgresql://.
+        # Render supplies a standard Postgres URL. Explicitly select the
+        # installed psycopg v3 driver rather than SQLAlchemy's psycopg2 default.
         if value.startswith("postgres://"):
-            return value.replace("postgres://", "postgresql://", 1)
+            return value.replace("postgres://", "postgresql+psycopg://", 1)
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+psycopg://", 1)
         return value
     return f"sqlite:///{BASE_DIR / 'capacity_connect.db'}"
 
