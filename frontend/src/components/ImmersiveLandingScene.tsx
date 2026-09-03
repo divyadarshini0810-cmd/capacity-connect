@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 
 type Props = { progress: number }
+type SceneProps = Props & { compact?: boolean }
 type Point = [number, number, number]
 
 const cameraStops = [
@@ -41,20 +42,20 @@ function CameraFlight({ progress }: Props) {
   return null
 }
 
-function Earth() {
+function Earth({ compact }: { compact: boolean }) {
   const world = useRef<THREE.Group>(null)
   useFrame((_state, delta) => { if (world.current) world.current.rotation.y += delta * 0.035 })
   return <group ref={world}>
     <mesh castShadow receiveShadow>
-      <sphereGeometry args={[1.55, 96, 96]} />
+      <sphereGeometry args={[1.55, compact ? 48 : 96, compact ? 48 : 96]} />
       <MeshDistortMaterial color="#075b83" emissive="#023e7a" emissiveIntensity={1.35} metalness={0.62} roughness={0.3} distort={0.16} speed={0.65} />
     </mesh>
     <mesh scale={1.004}>
-      <sphereGeometry args={[1.55, 60, 60]} />
+      <sphereGeometry args={[1.55, compact ? 32 : 60, compact ? 32 : 60]} />
       <meshBasicMaterial color="#1af0de" wireframe transparent opacity={0.14} />
     </mesh>
     <mesh scale={1.075}>
-      <sphereGeometry args={[1.55, 72, 72]} />
+      <sphereGeometry args={[1.55, compact ? 36 : 72, compact ? 36 : 72]} />
       <meshBasicMaterial color="#58e9ff" transparent opacity={0.06} side={THREE.BackSide} />
     </mesh>
     <mesh rotation={[0.65, 0.35, -0.15]} scale={[1.31, 1.31, 0.3]}>
@@ -68,10 +69,11 @@ function Earth() {
   </group>
 }
 
-function OceanParticles() {
+function OceanParticles({ compact }: { compact: boolean }) {
   const positions = useMemo(() => {
-    const values = new Float32Array(420 * 3)
-    for (let i = 0; i < 420; i += 1) {
+    const count = compact ? 220 : 420
+    const values = new Float32Array(count * 3)
+    for (let i = 0; i < count; i += 1) {
       const radius = 2.2 + Math.random() * 6.2
       const angle = Math.random() * Math.PI * 2
       values[i * 3] = Math.cos(angle) * radius
@@ -79,19 +81,19 @@ function OceanParticles() {
       values[i * 3 + 2] = Math.sin(angle) * radius - 1.2
     }
     return values
-  }, [])
+  }, [compact])
   return <points><bufferGeometry><bufferAttribute attach="attributes-position" args={[positions, 3]} /></bufferGeometry><pointsMaterial size={0.026} color="#75f6ec" transparent opacity={0.65} sizeAttenuation /></points>
 }
 
-function CompetencyNetwork() {
+function CompetencyNetwork({ compact }: { compact: boolean }) {
   const group = useRef<THREE.Group>(null)
-  const points = useMemo<Point[]>(() => Array.from({ length: 14 }, (_, index) => {
+  const points = useMemo<Point[]>(() => Array.from({ length: compact ? 10 : 14 }, (_, index) => {
     const angle = index * 2.399
     const radius = 2.6 + (index % 3) * 0.42
     return [Math.cos(angle) * radius, ((index % 5) - 2) * 0.47, Math.sin(angle) * radius] as Point
-  }), [])
+  }), [compact])
   useFrame((_state, delta) => { if (group.current) group.current.rotation.y -= delta * 0.022 })
-  return <group ref={group}>{points.map((point, index) => <Float key={index} speed={0.8 + (index % 3) * 0.16} floatIntensity={0.42} rotationIntensity={0.2}><group position={point}><mesh castShadow><sphereGeometry args={[0.07 + (index % 4) * 0.018, 20, 20]} /><meshStandardMaterial color={index % 4 === 0 ? '#7e67ff' : index % 5 === 0 ? '#4fdca1' : '#54f2e2'} emissive={index % 4 === 0 ? '#7e67ff' : '#1ccdc1'} emissiveIntensity={2.5} roughness={0.15} /></mesh><pointLight color={index % 4 === 0 ? '#946eff' : '#4ff3e4'} intensity={1.4} distance={1.5} /></group></Float>)}{points.map((point, index) => <Line key={`line-${index}`} points={[point, points[(index + 3) % points.length]]} color={index % 3 === 0 ? '#896cff' : '#3ee4d7'} transparent opacity={0.25} dashed dashScale={2.5} dashSize={0.08} gapSize={0.12} lineWidth={0.5} />)}</group>
+  return <group ref={group}>{points.map((point, index) => <Float key={index} speed={0.8 + (index % 3) * 0.16} floatIntensity={0.42} rotationIntensity={0.2}><group position={point}><mesh castShadow><sphereGeometry args={[0.07 + (index % 4) * 0.018, compact ? 12 : 20, compact ? 12 : 20]} /><meshStandardMaterial color={index % 4 === 0 ? '#7e67ff' : index % 5 === 0 ? '#4fdca1' : '#54f2e2'} emissive={index % 4 === 0 ? '#7e67ff' : '#1ccdc1'} emissiveIntensity={2.5} roughness={0.15} /></mesh><pointLight color={index % 4 === 0 ? '#946eff' : '#4ff3e4'} intensity={1.4} distance={1.5} /></group></Float>)}{points.map((point, index) => <Line key={`line-${index}`} points={[point, points[(index + 3) % points.length]]} color={index % 3 === 0 ? '#896cff' : '#3ee4d7'} transparent opacity={0.25} dashed dashScale={2.5} dashSize={0.08} gapSize={0.12} lineWidth={0.5} />)}</group>
 }
 
 function LearningOrbit() {
@@ -116,7 +118,7 @@ function AnalyticsConstellation() {
   return <group ref={chart} position={[0, -0.62, -1.3]}>{bars.map((height, index) => <Float key={height} speed={0.8} floatIntensity={0.18}><mesh position={[(index - 2.5) * 0.35, height / 2 - 0.2, 0]} castShadow><boxGeometry args={[0.16, height, 0.16]} /><meshStandardMaterial color={index === 3 ? '#7a68ff' : '#43e7d6'} emissive={index === 3 ? '#5d48c8' : '#14a99d'} emissiveIntensity={1.35} metalness={0.58} roughness={0.3} /></mesh></Float>)}<Line points={bars.map((height, index) => [(index - 2.5) * 0.35, height + 0.1, 0] as Point)} color="#d4c5ff" transparent opacity={0.7} lineWidth={1.2} /></group>
 }
 
-function World({ progress }: Props) {
+function World({ progress, compact }: SceneProps) {
   return <>
     <color attach="background" args={['#020811']} />
     <fog attach="fog" args={['#020811', 6, 17]} />
@@ -124,14 +126,14 @@ function World({ progress }: Props) {
     <directionalLight position={[5, 6, 4]} intensity={2.5} color="#9beff0" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
     <pointLight position={[-4, 2, 2]} intensity={16} color="#075fc1" distance={10} />
     <pointLight position={[3, -1, 2]} intensity={10} color="#714dff" distance={8} />
-    <Earth /><CompetencyNetwork /><LearningOrbit /><LegacyVault /><AnalyticsConstellation />
-    <OceanParticles /><Sparkles count={170} scale={[14, 9, 12]} size={1.4} speed={0.22} color="#7ff6e9" /><Stars radius={22} depth={34} count={2100} factor={2.15} saturation={0.1} fade speed={0.3} />
+    <Earth compact={Boolean(compact)} /><CompetencyNetwork compact={Boolean(compact)} /><LearningOrbit /><LegacyVault /><AnalyticsConstellation />
+    <OceanParticles compact={Boolean(compact)} /><Sparkles count={compact ? 90 : 170} scale={[14, 9, 12]} size={1.4} speed={0.22} color="#7ff6e9" /><Stars radius={22} depth={34} count={compact ? 850 : 2100} factor={2.15} saturation={0.1} fade speed={0.3} />
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.25, 0]} receiveShadow><circleGeometry args={[8.5, 96]} /><meshStandardMaterial color="#031a2b" emissive="#022137" emissiveIntensity={0.6} metalness={0.9} roughness={0.22} /></mesh>
-    <ContactShadows position={[0, -2.22, 0]} opacity={0.48} scale={10} blur={2.8} far={4.8} color="#0ce6d3" />
+    {!compact && <ContactShadows position={[0, -2.22, 0]} opacity={0.48} scale={10} blur={2.8} far={4.8} color="#0ce6d3" />}
     <CameraFlight progress={progress} />
   </>
 }
 
-export function ImmersiveLandingScene({ progress }: Props) {
-  return <Canvas className="immersive-r3f" shadows dpr={[1, 1.5]} camera={{ position: cameraStops[0].toArray(), fov: 43 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}><World progress={progress} /></Canvas>
+export function ImmersiveLandingScene({ progress, compact = false }: SceneProps) {
+  return <Canvas className="immersive-r3f" shadows={!compact} dpr={compact ? [1, 1.2] : [1, 1.5]} camera={{ position: cameraStops[0].toArray(), fov: 43 }} gl={{ antialias: !compact, alpha: false, powerPreference: 'high-performance' }}><World progress={progress} compact={compact} /></Canvas>
 }
