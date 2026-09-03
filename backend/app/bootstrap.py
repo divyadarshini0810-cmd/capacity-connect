@@ -1,7 +1,7 @@
 """Small, idempotent catalogue used only when a hosted database is brand new."""
 
 from . import db
-from .models import Department, Institution, JobRole, Role
+from .models import Department, EmployeeProfile, Institution, JobRole, Role, User
 
 
 ROLE_DATA = (
@@ -53,6 +53,42 @@ def ensure_platform_baseline():
     for title, domain, description in JOB_ROLE_DATA:
         if not JobRole.query.filter_by(title=title).first():
             db.session.add(JobRole(title=title, domain=domain, description=description))
+            changed = True
+
+    # The sign-in screen advertises this demo-safe account. Keeping it in the
+    # non-destructive bootstrap makes a fresh hosted database match the UI.
+    demo_user = User.query.filter_by(email="learner@capacityconnect.in").first()
+    if not demo_user:
+        learner_role = Role.query.filter_by(name="Employee/Learner").first()
+        data_analyst = JobRole.query.filter_by(title="Data Analyst").first()
+        department = Department.query.filter_by(
+            name="Learning & Digital Services", institution_id=institution.id
+        ).first()
+        if learner_role and data_analyst and department:
+            demo_user = User(
+                name="Aarav Nair",
+                email="learner@capacityconnect.in",
+                employee_id="CC-DEMO-001",
+                role=learner_role,
+                institution=institution,
+                department=department,
+                job_role=data_analyst,
+                experience_years=1,
+                ai_consent=True,
+            )
+            demo_user.set_password("Demo@123")
+            db.session.add(demo_user)
+            db.session.flush()
+            db.session.add(EmployeeProfile(
+                user_id=demo_user.id,
+                designation="Data Analyst Trainee",
+                work_location="Remote",
+                employment_type="Trainee",
+                languages_known=["English"],
+                target_skills=["Data Analysis Fundamentals", "SQL & Data Querying"],
+                available_times={"days": ["Monday", "Wednesday"], "time": "Flexible"},
+                onboarding_complete=True,
+            ))
             changed = True
 
     if changed:
