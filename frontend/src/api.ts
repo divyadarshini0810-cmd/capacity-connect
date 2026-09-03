@@ -1,5 +1,6 @@
-// Local Vite development uses a same-origin proxy, so browser CORS settings never block the app.
-const API = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://127.0.0.1:5000/api')
+// Local Vite and the hosted single-service deployment both use a same-origin
+// /api route. A custom VITE_API_URL remains available for split deployments.
+const API = import.meta.env.VITE_API_URL || '/api'
 
 export type ApiError = { error?: string }
 
